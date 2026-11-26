@@ -29,6 +29,7 @@ extensions:
       # headless Chrome. Off until you name a provider, since it sends the
       # agent's queries to that service. keenable needs no account; set
       # KEENABLE_API_KEY in the environment for higher rate limits.
+      # specstream needs SPECSTREAM_API_KEY in the environment.
       #web_search:
       #  provider: keenable
       background_attr:

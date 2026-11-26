@@ -68,6 +68,40 @@ func TestWebSearchToolKeenable(t *testing.T) {
 	}
 }
 
+func TestWebSearchToolSpecStream(t *testing.T) {
+	for _, provider := range []string{"specstream", "SpecStream", " SPECSTREAM "} {
+		t.Run(provider, func(t *testing.T) {
+			var asked []string
+			getenv := func(name string) string {
+				asked = append(asked, name)
+				return "ss-test"
+			}
+			noti := &capturingNotifications{}
+			tool := webSearchTool(config.MapConfig(map[string]any{
+				"web_search": map[string]any{"provider": provider},
+			}), noti, getenv)
+			require.NotNil(t, tool)
+			assert.Equal(t, "web_search", tool.Definition().Function.Name)
+			assert.Equal(t, []string{"SPECSTREAM_API_KEY"}, asked)
+			assert.Empty(t, noti.captured())
+		})
+	}
+}
+
+func TestWebSearchToolSpecStreamNeedsAKey(t *testing.T) {
+	for _, key := range []string{"", "  "} {
+		noti := &capturingNotifications{}
+		tool := webSearchTool(config.MapConfig(map[string]any{
+			"web_search": map[string]any{"provider": "specstream"},
+		}), noti, func(string) string { return key })
+		assert.Nil(t, tool)
+		notes := noti.captured()
+		require.Len(t, notes, 1)
+		assert.Equal(t, browserapi.LevelWarn, notes[0].level)
+		assert.Contains(t, notes[0].msg, "SPECSTREAM_API_KEY")
+	}
+}
+
 func TestWebSearchToolWarnsAboutUnknownProviders(t *testing.T) {
 	noti := &capturingNotifications{}
 	tool := webSearchTool(config.MapConfig(map[string]any{

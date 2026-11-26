@@ -30,7 +30,7 @@ import (
 // webSearchTool returns the web_search tool for the provider named by
 // web_search.provider, or nil when none is named. The tool sends the
 // agent's queries to a third party, so it stays off until the user
-// picks one. getenv reads the provider's optional API key.
+// picks one. getenv reads the provider's API key.
 func webSearchTool(
 	pconfig config.Config, noti browserapi.Notifications, getenv func(string) string,
 ) agent.Tool {
@@ -53,9 +53,17 @@ func webSearchTool(
 		return nil
 	case "keenable":
 		return agentools.NewWebSearch(agentools.NewKeenableSearch(getenv("KEENABLE_API_KEY")))
+	case "specstream":
+		key := strings.TrimSpace(getenv("SPECSTREAM_API_KEY"))
+		if key == "" {
+			_, _ = noti.Notify(browserapi.LevelWarn,
+				"web_search: provider specstream needs SPECSTREAM_API_KEY in the environment")
+			return nil
+		}
+		return agentools.NewWebSearch(agentools.NewSpecStreamSearch(key))
 	default:
 		_, _ = noti.Notify(browserapi.LevelWarn,
-			"web_search: unknown provider %q, expected keenable", provider)
+			"web_search: unknown provider %q, expected keenable or specstream", provider)
 		return nil
 	}
 }
